@@ -37,6 +37,13 @@ When you start the bot, you will have 3 options:
   - Load a custom task loop: a list of loops the user has created will appear here. If there are none, it will show none. You will have the option to delete your loops here as well.
   - Create a custom loop: here you will be able to queue up tasks to form a custom loop. You will be able to queue as many as you wish, with the option to remove the last task from the queue, and confirm the loop to save it to the file `custom_loops.json`
 
+  ***Currently supported tasks***
+  - Bridge x ETH from ETH to ERA
+  - Bridge x ETH from ERA to ETH
+  - Wait until an ETH balance on ETH reaches x
+  - Wait until an ETH balance on ERA reaches x
+  - Wait x milliseconds
+
   Then, a prompt will ask you on which wallet you wish to perform the loop on. You can select multiple, they will be run in parallel.
 
   You may open several instanes of the bot in multiple terminals to run different loops on different wallets.
