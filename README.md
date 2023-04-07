@@ -1,5 +1,7 @@
 # zksync_botting
 Zksync botting utility for MVHQ fam
+
+
 ***DISCLAIMER: Do not use your main wallets for botting.*** The private keys of user wallets are stored in a txt file, unencrypted. It is generally absolutely not recommended to store private keys like this unencrypted, on a hardware. I will look into encryption of these in the near future. In the meantime, *** PLEASE Do not use your main wallets for botting. ***
 
 ### How to install dependencies:
