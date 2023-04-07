@@ -1,5 +1,14 @@
 [
-    {"b_orb_ETH_ERA": "0.05"},
-    {"delay_ms": 5000},
-    {"b_orb_ERA_ETH": "-1"}
+    {
+      "b_orb_ETH_ERA": "0.02"
+    },
+    {
+      "await_bal_ERA": "0.018"
+    },
+    {
+      "b_orb_ERA_ETH": "0.019"
+    },
+    {
+      "await_bal_ETH": "0.013"
+    }
 ]

@@ -65,7 +65,9 @@ async function main(){ //Add blocknative gas estimation
                             if (!confirm) {exit=1; console.log("Proposition declined"); break;}
                             else {
                                 let wallets_unconnected = await inq_3_chose_wallets(user_wallets)
-                                await initiate_loop(default_loop, wallets_unconnected);// TODOTODOTODTOOZ
+                                await task_orchestrator(default_loop, wallets_unconnected);// TODOTODOTODTOOZ
+                                exit = 1;
+                                break;
                             }
                         case 'Load custom loop':
                             let chosen_loop = await inq_3_chose_custom_loop(custom_loops)
@@ -75,7 +77,9 @@ async function main(){ //Add blocknative gas estimation
                                 if (!confirm2) {exit=1; console.log("Proposition declined"); break;}
                                 else {
                                     let wallets_unconnected = await inq_3_chose_wallets(user_wallets)
-                                    await initiate_loop(chosen_loop, wallets_unconnected);// TODOTODOTODTOOZ
+                                    await task_orchestrator(chosen_loop, wallets_unconnected);// TODOTODOTODTOOZ
+                                    exit = 1;
+                                    break;
                                 }
                             }
                         case 'Create custom loop':
@@ -84,7 +88,9 @@ async function main(){ //Add blocknative gas estimation
                             if (!confirm3) {exit=1; console.log("Proposition declined"); break;}
                             else {
                                 let wallets_unconnected = await inq_3_chose_wallets(user_wallets)
-                                await initiate_loop(custom_loop, wallets_unconnected);;// TODOTODOTODTOOZ
+                                await task_orchestrator(custom_loop, wallets_unconnected);;// TODOTODOTODTOOZ
+                                exit = 1;
+                                break;
                             }
                     }
                 }
@@ -124,6 +130,10 @@ function task_to_message(task){
             return ("Bridge " + (task["b_orb_ERA_ETH"]!=-1? task["b_orb_ERA_ETH"]:"all") + " ETH from ERA --> ETH")
         case "delay_ms":
             return ("Delay " + task["delay_ms"] + " ms")
+        case "await_bal_ETH":
+            return ("Wait for ETH balance to reach " + task["await_bal_ETH"] + " ETHer")
+        case "await_bal_ERA":
+            return ("Wait for ERA balance to reach " + task["await_bal_ERA"] + " ETHer")
         default: 
             return "Task undefined"
     }
@@ -182,6 +192,8 @@ async function inq_3_create_custom_loop(tasks, loops){
                     message: ' ------- Please chose an amount. ------- ',
                     default: 0,
                 }])
+                if (isNaN(amount.a)){console.log("Please input a valid number");break;}
+
                 let task_without_amount = tasks[choices.indexOf(task.a)]
                 task_without_amount[Object.keys(task_without_amount)[0]] = amount.a.toString()
                 custom_loop.push(task_without_amount)
@@ -292,7 +304,7 @@ async function inq_1_action(action_list_main){
         {
             type: 'list',
             name: 'a',
-            message: '\n\n        ****************************************************************\n\n\n ------- Chose your action -------',
+            message: '\n\n        *********************** Welcome ser *************************\n\n\n ------- Chose your action -------',
             choices: action_list_main,
             default: 'Task loop',
         }
@@ -300,93 +312,169 @@ async function inq_1_action(action_list_main){
     return res.a
 }
 
-async function initiate_default_loop(Wallet_array_tasks_unconnected){
-    //Bridge 0.01 ETH -> ERA
-    //Bridge all ERA -> ETH'
-
-    let Wallet_array_tasks_ETH = []
-    let Wallet_array_tasks_ERA = []
-    for (var wallet of Wallet_array_tasks_unconnected){
-        Wallet_array_tasks_ETH.push(wallet.connect(ethProvider))
-        Wallet_array_tasks_ERA.push(new zksync.Wallet(wallet.privateKey).connect(zkSyncProvider))
+//Make parallaelysable
+//loops: array of task Objects, ID and amount  
+async function task_orchestrator(loops, wallets_unconnected){
+    let promise_arr = []
+    for (var wallet_unconnected of wallets_unconnected){
+        promise_arr.push(task_looper(loops, wallet_unconnected))
     }
+    await Promise.all(promise_arr)
+}
 
-    //Check Balances
-    let balances = {}
-    let spinner = ora({
-        text: "Fetching Balances...",
-        spinner: 'line',
-        color: 'red',
-        indent: 3,
-    }).start()
-    for (let wallet of Wallet_array_tasks_ETH){
-        // balances_promises.push(wallet.getBalance())
-        let temp = await wallet.getBalance()
-        balances[wallet.address] = ethers.utils.formatEther(temp.toString())
+async function task_looper(loops, wallet_unconnected){
+    for (var task of loops){
+        await task_switch(wallet_unconnected, task)
     }
-    spinner.succeed("Balances (ETH): ")
-    console.log(balances)
+}
 
-    console.log(" ------- Now Bridging funds to ERA ------- ")
-    for (var eth_wallet of Wallet_array_tasks_ETH){
-        let res = await bridge_orbiter_ETH_to_ERA(eth_wallet, 0.025)
-        let temp = new zksync.Wallet(eth_wallet.privateKey).connect(zkSyncProvider) //TEMPORARY
-        let era_balance = BigNumber.from("0")
-        let spinner2 = ora({
-            text: "Balance has not arrived to ERA yet...",
-            spinner: 'line',
-            color: 'red',
-            indent: 3,
-        }).start()
-        while (era_balance.lt(ethers.utils.parseEther(res.expected_value_ERA.toString()))){
-            era_balance = await temp.getBalance()
+async function task_switch(wallet_unconnected, task){
+    switch(Object.keys(task)[0]){
+        case 'b_orb_ETH_ERA':
+            console.log(" --- Attemping bridge from ETH to ERA of amount: ", task["b_orb_ETH_ERA"], " on wallet: ", wallet_unconnected.address, " --- ")
+            await bridge_orbiter_ETH_to_ERA(wallet_unconnected, task["b_orb_ETH_ERA"])
+            break;
+        case "b_orb_ERA_ETH":
+            console.log(" --- Attemping bridge from ERA to ETH of amount: ", task["b_orb_ERA_ETH"],  " on wallet: ", wallet_unconnected.address, " --- ")
+            await bridge_orbiter_ERA_to_ETH(wallet_unconnected, task["b_orb_ERA_ETH"])
+            break;
+        case "delay_ms":   
+            console.log(" --- Waiting ", task["delay_ms"], "milliseconds for wallet ", wallet_unconnected.address,"---")
+            await delay(parseInt(task["delay_ms"]))
+            break;
+        case "await_bal_ETH":
+            console.log(" --- Waiting for wallet ", wallet_unconnected.address, " on ETH to reach ", task["await_bal_ETH"], " ETHer")
+            await await_bal_ETH(wallet_unconnected, task["await_bal_ETH"])
+            break;
+        case "await_bal_ERA":
+            console.log(" --- Waiting for wallet ", wallet_unconnected.address, " on ERA to reach ", task["await_bal_ERA"], " ETHer")
+            await await_bal_ERA(wallet_unconnected, task["await_bal_ERA"])
+            break;
+        default: 
+            console.log(" --- Task undefined, skipping --- ", Object.keys(task)[0])
+            break;
+    }
+}
+
+async function await_bal_ETH(wallet_unconnected, value){
+    let eth_wallet = wallet_unconnected.connect(ethProvider)
+    let expect_value = ethers.utils.parseEther(value)
+    let balance_enough = 0;
+    while(!balance_enough){
+        let eth_balance = await eth_wallet.getBalance()
+        balance_enough = eth_balance.gte(expect_value)
+        if (!balance_enough){
+            console.log(" - Balance on wallet ", wallet_unconnected.address, " has not reached", value," yet, waiting 5 sec. - ")
             await delay(5000)
         }
-        spinner2.succeed("Balance has arrived on ERA!!")
-
-        console.log(" ------- Now Bridging funds back to ETH ------- ")
-        let res2 = await bridge_orbiter_ERA_to_ETH(temp, ethers.utils.formatEther(era_balance.sub(ethers.utils.parseEther("0.0003")).sub(BigNumber.from(era_balance.toString().substring(5))).toString()))
-        retur25
     }
+    console.log(" - Balance for wallet", wallet_unconnected.address, " of ", value, "ETH on ETH reached. - ")
+}
+
+async function await_bal_ERA(wallet_unconnected, value){
+    let era_wallet = new zksync.Wallet(wallet_unconnected.privateKey).connect(zkSyncProvider)
+    let expect_value = ethers.utils.parseEther(value)
+    let balance_enough = 0;
+    while(!balance_enough){
+        let era_balance = await era_wallet.getBalance()
+        balance_enough = era_balance.gte(expect_value)
+        if (!balance_enough){
+            console.log(" - Balance on wallet ", wallet_unconnected.address, " has not reached", value," yet, waiting 5 sec. - ")
+            await delay(5000)
+        }
+    }
+    console.log(" - Balance for wallet", wallet_unconnected.address, " of ", value, "ETH on ERA reached. - ")
 }
 
 //Arbitrum: 9002
 //Era: 9014
 //WARNING: withholder fee.
 //MAKE SURE eth_wallet <<-------------------
-async function bridge_orbiter_ETH_to_ERA(eth_wallet, value){// add 0.0013
+async function bridge_orbiter_ETH_to_ERA(wallet_unconnected, value){// add 0.0013
 
-    let value_num = value
-    let expected_value_ERA = value_num-0.003
+    //WALLET UNCONNECTED INCOMING !!!
+    const eth_wallet = wallet_unconnected.connect(ethProvider)
+    let expected_value_ERA = value-0.003
+    // if (value == -1){
+        
+    // }
+    // else {
+    //     tx_value = ethers.utils.parseEther(value).add(ORBITER_ERA_NETWORK_ID)
+    // }
+    
 
-    value = value.toString()
-    const ORBITER_ETH_ADDRESS = "0x80c67432656d59144ceff962e8faf8926599bcf8"
-    const ORBITER_ERA_NETWORK_ID = "9014"
-    let blocknativeGas = await axios.get("https://api.blocknative.com/gasprices/blockprices?confidenceLevels=90&unit=wei",axiosConfig);
-    let blockNativeGasData = blocknativeGas.data.blockPrices[0].estimatedPrices[0];
+    let balance_enough = false;
+    let tx
+    while(!balance_enough){
+        value = value.toString()
+        const ORBITER_ETH_ADDRESS = "0x80c67432656d59144ceff962e8faf8926599bcf8"
+        const ORBITER_ERA_NETWORK_ID = "9014"
+        let tx_value = ethers.utils.parseEther(value).add(ORBITER_ERA_NETWORK_ID)
 
-    const tx = {
-        from: eth_wallet.address,
-        to: ORBITER_ETH_ADDRESS,
-        value: ethers.utils.parseEther(value).add(ORBITER_ERA_NETWORK_ID),
-        nonce: await ethProvider.getTransactionCount(eth_wallet.address, "latest"),
-        gasLimit: "21000",
-        maxFeePerGas: ethers.utils.parseUnits(Math.ceil(blockNativeGasData.maxFeePerGas).toString(), "gwei"),
-        maxPriorityFeePerGas: ethers.utils.parseUnits(Math.ceil(blockNativeGasData.maxPriorityFeePerGas).toString(), "gwei"),
+
+        let blocknativeGas = await axios.get("https://api.blocknative.com/gasprices/blockprices?confidenceLevels=90&unit=wei",axiosConfig);
+        let blockNativeGasData = blocknativeGas.data.blockPrices[0].estimatedPrices[0];
+        tx = {
+            from: eth_wallet.address,
+            to: ORBITER_ETH_ADDRESS,
+            value: tx_value,
+            nonce: await ethProvider.getTransactionCount(eth_wallet.address, "latest"),
+            gasLimit: "21000",
+            maxFeePerGas: ethers.utils.parseUnits(Math.ceil(blockNativeGasData.maxFeePerGas).toString(), "gwei"),
+            maxPriorityFeePerGas: ethers.utils.parseUnits(Math.ceil(blockNativeGasData.maxPriorityFeePerGas).toString(), "gwei"),
+        }
+
+        let txcost_wei = BigNumber.from(tx.gasLimit).mul(BigNumber.from(tx.maxFeePerGas).add(BigNumber.from(tx.maxPriorityFeePerGas)))
+        let balance = await ethProvider.getBalance(eth_wallet.address)
+        balance_enough = balance.gte(txcost_wei.add(tx.value))
+        if (!balance_enough) {
+            console.log(" - Not enough Balance on wallet ",eth_wallet.address," to send transaction for ETH to ERA bridge, waiting 5 seconds... - ")
+            await delay(5000);
+        }
     }
+
     let tx_send = await eth_wallet.sendTransaction(tx)
-    console.log("tx submitted, hash (ETH): ", tx_send.hash)
+    console.log(" - Tx submitted for bridge ETH to ERA on wallet: ",eth_wallet.address,", hash (ETH): ", tx_send.hash, " - ")
     let receipt = await tx_send.wait()
-    console.log(receipt.status? "tx included":"tx inclusion failed")
-    let res = {}
-    res["hash"] = receipt.hash
-    res["status"] = receipt.status
-    res["expected_value_ERA"] = expected_value_ERA
-    return res
+    console.log(receipt.status? (" - Tx included for bridge ETH to ERA on wallet: ",eth_wallet.address, " - ") : (" - Tx inclusion failed for bridge ETH to ERA on wallet: ",eth_wallet.address, " - "))
 }
+
+async function bridge_orbiter_ERA_to_ETH(wallet_unconnected, value){// add 0.0013
+
+    const era_wallet = new zksync.Wallet(wallet_unconnected.privateKey).connect(zkSyncProvider)
+    const ORBITER_ERA_ADDRESS = "0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8"
+    const ORBITER_ETH_NETWORK_ID = "9001"
+
+    let balance_enough = false;
+    while(!balance_enough){
+        let zk_gas = await zkSyncProvider.getGasPrice()
+        let zk_balance = await era_wallet.getBalance()
+        let gas_estimate = await zkSyncProvider.estimateGas({
+            from: era_wallet.address,
+            to: ORBITER_ERA_ADDRESS,
+        })
+        let needed = BigNumber.from(gas_estimate).mul(zk_gas).add(ethers.utils.parseEther(value.toString()).add(ORBITER_ETH_NETWORK_ID))
+        balance_enough = zk_balance.gte(needed)
+        if (!balance_enough) {
+            console.log(" - Not enough Balance on wallet ",era_wallet.address," to send transaction for ERA to ETH bridge, waiting 5 seconds... - ")
+            await delay(5000);
+        }
+    }
+
+    const tx_transfer = await era_wallet.transfer({
+        to: ORBITER_ERA_ADDRESS,
+        token: zksync.utils.ETH_ADDRESS,
+        amount: ethers.utils.parseEther(value).add(ORBITER_ETH_NETWORK_ID),
+    });
+    console.log(" - Tx submitted for bridge ERA to ETH on wallet: ", era_wallet.address, ", hash (ERA)" , tx_transfer.hash, " - ")
+    let receipt = await tx_transfer.wait()
+    console.log(receipt.status? (" - Tx included for bridge ERA to ETH on wallet: ",era_wallet.address, " - ") : (" - Tx inclusion failed for bridge ERA to ETH on wallet: ",era_wallet.address, " - "))
+}
+
 
 //WARN ARB BRIDIGN
 async function bridge_orbiter_ERA_to_ARB(era_wallet, value){// add 0.0013
+
 
     const ORBITER_ERA_ADDRESS = "0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8"
     const ORBITER_ARB_NETWORK_ID = "9002"
@@ -395,21 +483,6 @@ async function bridge_orbiter_ERA_to_ARB(era_wallet, value){// add 0.0013
         to: ORBITER_ERA_ADDRESS,
         token: zksync.utils.ETH_ADDRESS,
         amount: ethers.utils.parseEther(value).add(ORBITER_ARB_NETWORK_ID),
-    });
-    console.log("tx submitted, hash (ERA): ", tx_transfer.hash)
-    let receipt = await tx_transfer.wait()
-    console.log(receipt.status? "tx included":"tx inclusion failed")
-}
-
-async function bridge_orbiter_ERA_to_ETH(era_wallet, value){// add 0.0013
-
-    const ORBITER_ERA_ADDRESS = "0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8"
-    const ORBITER_ETH_NETWORK_ID = "9001"
-
-    const tx_transfer = await era_wallet.transfer({
-        to: ORBITER_ERA_ADDRESS,
-        token: zksync.utils.ETH_ADDRESS,
-        amount: ethers.utils.parseEther(value).add(ORBITER_ETH_NETWORK_ID),
     });
     console.log("tx submitted, hash (ERA): ", tx_transfer.hash)
     let receipt = await tx_transfer.wait()
