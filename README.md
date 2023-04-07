@@ -24,9 +24,9 @@ When you start the bot, you will have 3 options:
  If you have wallets that you wish to use for the bot, please add them to this file in the correct format, seperating them with a comma like so:
  `
 {   
-    "0xaddress1": "privatekey1",
-    "0xaddress2": "privatekey2",
-    "0xaddress3": "privatekey3"
+"0xaddress1": "privatekey1",
+"0xaddress2": "privatekey2",
+"0xaddress3": "privatekey3"
 }
  `
 
