@@ -46,7 +46,6 @@ When you start the bot, you will have 3 options:
   - Wait until an ETH balance on ETH reaches x
   - Wait until an ETH balance on ERA reaches x
   - Wait x milliseconds
-  - Check ERA gas price but this won't do much for your bot xDD
 
   Then, a prompt will ask you on which wallet you wish to perform the loop on. You can select multiple, they will be run in parallel.
 
