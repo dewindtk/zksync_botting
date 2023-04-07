@@ -19,7 +19,7 @@ async function main(){ //Add blocknative gas estimation
     let user_wallets = await fs.promises.readFile('user_wallets.json', { encoding: 'utf8' })
     user_wallets = JSON.parse(user_wallets)
 
-    const action_list_main = ['Task loop', 'Create new Wallets', 'List all available Wallets']
+    const action_list_main = ['Task loop', 'Create new Wallets', 'List all available Wallets', 'Check current ERA gas price']
     const options = ['Load default loop', 'Load custom loop', 'Create custom loop']
     
     while(1){
@@ -51,6 +51,12 @@ async function main(){ //Add blocknative gas estimation
                 }
                 await fs.promises.writeFile(`user_wallets.json`, JSON.stringify(user_wallets, null, 2))
                 console.log("\nWallets created and saved\n")
+                break;
+            
+            case 'Check current ERA gas price':
+                let era_gas_price = await zkSyncProvider.getGasPrice()
+                era_gas_price = ethers.utils.formatUnits(era_gas_price, "gwei")
+                console.log("\n --- Gas price on ERA is now ", era_gas_price, "gwei. --- \n")
                 break;
 
             //Task loop
