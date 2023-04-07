@@ -17,6 +17,8 @@ Zksync botting utility for MVHQ fam
  - Type in the command: `node zk_sync_bot.js`. You can auto-complete the name of the bot by typing in the first few letters and hitting `tab`
 
 # How the bot works
+*First and foremost, you can stop the bot by simply closing the window or pressing ctr+c at all times. It will inturrupt any tasks and stop sending new txs. Also, you can clear adn clean the terminal with the command ^cls`*
+
 When you start the bot, you will have 3 options:
  - Task loop
  - Create new wallets
