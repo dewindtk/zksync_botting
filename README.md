@@ -22,13 +22,13 @@ When you start the bot, you will have 3 options:
  **Create new wallets** is intuitive. You can specify a number of new wallets you wish to create and their randomly generated private keys will be stored in `user_wallets.json` in the format: {"wallet_address": "private key"}. **These will not be encrypted** so make sure when you interact with this file you close it afterwards so nobody peaks. Encryption would be useless because this code is open-source.
  The private keys will not appear in the UI of the bot.
  If you have wallets that you wish to use for the bot, please add them to this file in the correct format, seperating them with a comma like so:
- `
+ ```
 {   
-"0xaddress1": "privatekey1",
-"0xaddress2": "privatekey2",
-"0xaddress3": "privatekey3"
+    "0xaddress1": "privatekey1",
+    "0xaddress2": "privatekey2",
+    "0xaddress3": "privatekey3"
 }
- `
+ ```
 
  **List all available wallets** lists all the wallets that are saved in the `ùser_wallets.json` file.
 
