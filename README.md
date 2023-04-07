@@ -1,5 +1,6 @@
 # zksync_botting
 Zksync botting utility for MVHQ fam
+***DISCLAIMER: Do not use your main wallets for botting.*** The private keys of user wallets are stored in a txt file, unencrypted. It is generally absolutely not recommended to store private keys like this unencrypted, on a hardware. I will look into encryption of these in the near future. In the meantime, *** PLEASE Do not use your main wallets for botting. ***
 
 ### How to install dependencies:
  - Install nodejs from [here](https://nodejs.org/en) if you have not already. This is the runtime enviroment which will allow you to run javascript from the terminal.
@@ -22,7 +23,7 @@ When you start the bot, you will have 3 options:
 
 *Check current ERA gas price* return the current gas price (base fee, prio is the same) per computational Unit of the network.
 
- *Create new wallets* is intuitive. You can specify a number of new wallets you wish to create and their randomly generated private keys will be stored in `user_wallets.json` in the format: {"wallet_address": "private key"}. **These will not be encrypted** so make sure when you interact with this file you close it afterwards so nobody peaks. However, storing private keys like this on a device unencrypted is generally not recommended. Which is why I will add a password encryption like metamask in the near future.
+ *Create new wallets* is intuitive. You can specify a number of new wallets you wish to create and their randomly generated private keys will be stored in `user_wallets.json` in the format: {"wallet_address": "private key"}. **These will not be encrypted** so make sure when you interact with this file you close it afterwards so nobody peaks. However, storing private keys like this on a device unencrypted is generally not recommended. So please ***Do not use your main wallets for botting.***
  The private keys will not appear in the UI of the bot.
  If you have wallets that you wish to use for the bot, please add them to this file in the correct format, seperating them with a comma like so:
  ```
