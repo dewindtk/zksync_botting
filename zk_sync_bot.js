@@ -2,8 +2,6 @@ import zksync from "zksync-web3";
 import ethers, { BigNumber } from "ethers";
 import fs from "fs";
 import inquirer from 'inquirer'
-import ora from 'ora'
-// const args = require('args-parser')(process.argv);
 
 import axios from"axios"
 axios.default
@@ -14,7 +12,7 @@ const zkSyncProvider = new zksync.Provider("https://mainnet.era.zksync.io");
 const ethProvider = new ethers.providers.JsonRpcProvider("https://eth-mainnet.g.alchemy.com/v2/3whcw0AqSjmu1MWl7GCV2sS1hwkbp9yq");
 const arbProvider = new ethers.providers.JsonRpcProvider("https://arb-mainnet.g.alchemy.com/v2/JfI5EuiX5GKnIkdrJJvsfnd-_rP4Q3to");
 
-async function main(){ //Add blocknative gas estimation
+async function main(){
 
     let user_wallets = await fs.promises.readFile('user_wallets.json', { encoding: 'utf8' })
     user_wallets = JSON.parse(user_wallets)
@@ -33,12 +31,10 @@ async function main(){ //Add blocknative gas estimation
         let action = await inq_1_action(action_list_main)
     
         switch (action){
-            //List all available wallets
             case 'List all available Wallets':
                 console.log(Object.keys(user_wallets))
                 break;
 
-            //Create new wallets and save
             case 'Create new Wallets':
                 let wallet_count_tocreate = "ff"
                 while(isNaN(wallet_count_tocreate)){
@@ -103,29 +99,6 @@ async function main(){ //Add blocknative gas estimation
                 
         }
     }
-
-
-
-    // let answers = await inquirer.prompt([
-    //     {
-    //         type: 'checkbox',
-    //         name: 'Option',
-    //         message: 'Chose your action:',
-    //         choices: user_wallets.flatMap((obj) => Object.keys(obj)[0]),
-    //         default: [Object.keys(user_wallets[0])[0]]
-    //     }])
-    // console.log(answers.Option)
-
-    // const arb_wallet = new ethers.Wallet(PRIVATE_KEY).connect(arbProvider)
-    // console.log((await arb_wallet.getBalance()).toString())
-
-      //Transfer to ORBITER ADDRESS
-      
-    // zkSyncWallet.transfer({
-    //     to: "0xbC5126Ea9D3A9b7e8353051DC646bfC4fC65c1F7",
-    //     token: zksync.utils.ETH_ADDRESS,
-    //     amount: ethers.utils.parseEther("0.01"),
-    //   });
 }
 
 function task_to_message(task){
@@ -318,17 +291,16 @@ async function inq_1_action(action_list_main){
     return res.a
 }
 
-//Make parallaelysable
 //loops: array of task Objects, ID and amount  
 async function task_orchestrator(loops, wallets_unconnected){
     let promise_arr = []
     for (var wallet_unconnected of wallets_unconnected){
-        promise_arr.push(task_looper(loops, wallet_unconnected))
+        promise_arr.push(task_queuer(loops, wallet_unconnected))
     }
     await Promise.all(promise_arr)
 }
 
-async function task_looper(loops, wallet_unconnected){
+async function task_queuer(loops, wallet_unconnected){
     for (var task of loops){
         await task_switch(wallet_unconnected, task)
     }
