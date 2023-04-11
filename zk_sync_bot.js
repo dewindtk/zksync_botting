@@ -472,7 +472,7 @@ async function bridge_orbiter_ERA_to_ETH(wallet_unconnected, value){// add 0.001
             balance_enough = 1
         }
         else{
-            value = ethers.utils.parseEther(value.toString())
+            value = ethers.utils.parseEther(value.toString()).add(ORBITER_ERA_ADDRESS)
             let needed = BigNumber.from(gas_estimate).mul(zk_gas).add(value).add(ORBITER_ETH_NETWORK_ID)
             balance_enough = zk_balance.gte(needed)
             if (!balance_enough) {
@@ -489,7 +489,12 @@ async function bridge_orbiter_ERA_to_ETH(wallet_unconnected, value){// add 0.001
     });
     console.log(" - Tx submitted for bridge ERA to ETH on wallet: ", era_wallet.address, ", hash (ERA)" , tx_transfer.hash, " - ")
     let receipt = await tx_transfer.wait()
-    console.log(receipt.status? (" - Tx included for bridge ERA to ETH on wallet: ",era_wallet.address, " - ") : (" - Tx inclusion failed for bridge ERA to ETH on wallet: ",era_wallet.address, " - "))
+    if (receipt.status){
+        console.log(" - Tx included for bridge ERA to ETH on wallet: ",era_wallet.address, " - ")
+    }
+    else{
+        console.log(" - Tx inclusion failed for bridge ERA to ETH on wallet: ",era_wallet.address, " - ")
+    }
 }
 
 
