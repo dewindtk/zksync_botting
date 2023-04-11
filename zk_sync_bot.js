@@ -472,8 +472,8 @@ async function bridge_orbiter_ERA_to_ETH(wallet_unconnected, value){// add 0.001
             balance_enough = 1
         }
         else{
-            value = ethers.utils.parseEther(value.toString()).add(ORBITER_ERA_ADDRESS)
-            let needed = BigNumber.from(gas_estimate).mul(zk_gas).add(value).add(ORBITER_ETH_NETWORK_ID)
+            value = ethers.utils.parseEther(value.toString()).add(ORBITER_ETH_NETWORK_ID)
+            let needed = BigNumber.from(gas_estimate).mul(zk_gas).add(value)
             balance_enough = zk_balance.gte(needed)
             if (!balance_enough) {
                 console.log(" - Not enough Balance on wallet ",era_wallet.address," to send transaction for ERA to ETH bridge, waiting 5 seconds... - ")
