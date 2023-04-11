@@ -3,5 +3,11 @@
     {"b_orb_ERA_ETH": "x"},
     {"await_bal_ETH": "x"},
     {"await_bal_ERA": "x"},
+    {"s_swap_ETH_USDC": "x"},
+    {"s_swap_USDC_ETH": "x"},
+    {"s_swap_ETH_BUSD": "x"},
+    {"s_swap_BUSDC_ETH": "x"},
+    {"s_swap_USDC_BUSD": "x"},
+    {"s_swap_BUSD_USDC": "x"},
     {"delay_ms": "x"}
 ]
