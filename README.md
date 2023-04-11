@@ -58,7 +58,7 @@ When you start the bot, you will have 3 options:
   - SyncSwap x bUSD to USDC
   - Wait x milliseconds
 
-  *SyncSwapping an amount of -1 will swap your entire token Balance.* 
+  *SyncSwapping an amount of -1 will swap your entire token Balance. Please consider that swapping all of your ETH will not leave you gas money xD* 
 
   Then, a prompt will ask you on which wallet you wish to perform the loop on. You can select multiple, they will be run in parallel.
 
