@@ -11,6 +11,9 @@ const zkSyncProvider = new zksync.Provider("https://mainnet.era.zksync.io");
 const ethProvider = new ethers.providers.JsonRpcProvider("https://eth-mainnet.g.alchemy.com/v2/3whcw0AqSjmu1MWl7GCV2sS1hwkbp9yq");
 const arbProvider = new ethers.providers.JsonRpcProvider("https://arb-mainnet.g.alchemy.com/v2/JfI5EuiX5GKnIkdrJJvsfnd-_rP4Q3to");
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+const bUSD = "0x2039bb4116b4efc145ec4f0e2ea75012d6c0f181"
+const wETH = "0x5aea5775959fbc2557cc8789bc1bf90a239d9a91"
+const USDC = "0x3355df6D4c9C3035724Fd0e3914dE96A5a83aaf4"
 
 
 async function main(){
@@ -113,6 +116,10 @@ function task_to_message(task){
             return ("Wait for ETH balance to reach " + task["await_bal_ETH"] + " ETHer")
         case "await_bal_ERA":
             return ("Wait for ERA balance to reach " + task["await_bal_ERA"] + " ETHer")
+        case "await_bal_ERA_USDC":
+            return ("Wait for USDC balance on ERA to reach " + task["await_bal_ERA_USDC"])
+        case "await_bal_ERA_BUSD":
+            return ("Wait for BUSD balance on ERA to reach " + task["await_bal_ERA_BUSD"])
         case"s_swap_ETH_USDC":
             return ("SyncSwap " + task["s_swap_ETH_USDC"] + " ETH to USDC")
         case"s_swap_USDC_ETH":
@@ -320,10 +327,6 @@ async function task_queuer(loops, wallet_unconnected){
 
 async function task_switch(wallet_unconnected, task){
 
-    const bUSD = "0x2039bb4116b4efc145ec4f0e2ea75012d6c0f181"
-    const wETH = "0x5aea5775959fbc2557cc8789bc1bf90a239d9a91"
-    const USDC = "0x3355df6D4c9C3035724Fd0e3914dE96A5a83aaf4"
-
     switch(Object.keys(task)[0]){
         case 'b_orb_ETH_ERA':
             console.log(" --- Attemping bridge from ETH to ERA of amount: ", task["b_orb_ETH_ERA"], " on wallet: ", wallet_unconnected.address, " --- ")
@@ -344,6 +347,14 @@ async function task_switch(wallet_unconnected, task){
         case "await_bal_ERA":
             console.log(" --- Waiting for wallet ", wallet_unconnected.address, " on ERA to reach ", task["await_bal_ERA"], " ETHer")
             await await_bal_ERA(wallet_unconnected, task["await_bal_ERA"])
+            break;
+        case "await_bal_ERA_USDC":
+            console.log(" --- Waiting for wallet ", wallet_unconnected.address, " USDC balance on ERA to reach ", task["await_bal_ERA_USDC"])
+            await await_bal_ERA_USDC(wallet_unconnected, task["await_bal_ERA_USDC"])
+            break;
+        case "await_bal_ERA_BUSD":
+            console.log(" --- Waiting for wallet ", wallet_unconnected.address, " bUSD balance on ERA to reach ", task["await_bal_ERA_BUSD"])
+            await await_bal_ERA_BUSD(wallet_unconnected, task["await_bal_ERA_BUSD"])
             break;
         case "s_swap_ETH_USDC":
             console.log(" --- Attempting SyncSwap from ETH to USDC of amount: ",task["s_swap_ETH_USDC"]==-1?"all":task["s_swap_ETH_USDC"]," ETH on wallet: ", wallet_unconnected.address, " --- ")
@@ -403,6 +414,44 @@ async function await_bal_ERA(wallet_unconnected, value){
         }
     }
     console.log(" - Balance for wallet", wallet_unconnected.address, " of ", value, "ETH on ERA reached. - ")
+}
+
+async function await_bal_ERA_USDC(wallet_unconnected, value){
+    let era_wallet = new zksync.Wallet(wallet_unconnected.privateKey).connect(zkSyncProvider)
+    let expect_value = ethers.utils.parseUnits(value, 6)
+    let balance_enough = 0;
+
+    //Contract obj
+    const decimals_abi = ["function decimals() public view returns (uint8)", "function approve(address spender, uint256 value) public returns (bool)", "function balanceOf(address who) public view returns (uint256)"]
+    const token_in_contract = new ethers.Contract(USDC, decimals_abi, zkSyncProvider)
+    while(!balance_enough){
+        let era_balance = await token_in_contract.balanceOf(era_wallet.address)
+        balance_enough = era_balance.gte(expect_value)
+        if (!balance_enough){
+            console.log(" - USDC balance on wallet ", wallet_unconnected.address, " has not reached", value," yet, waiting 5 sec. - ")
+            await delay(5000)
+        }
+    }
+    console.log(" - USDC balance for wallet", wallet_unconnected.address, " of ", value, "on ERA reached. - ")
+}
+
+async function await_bal_ERA_BUSD(wallet_unconnected, value){
+    let era_wallet = new zksync.Wallet(wallet_unconnected.privateKey).connect(zkSyncProvider)
+    let expect_value = ethers.utils.parseEther(value)
+    let balance_enough = 0;
+
+    //Contract obj
+    const decimals_abi = ["function decimals() public view returns (uint8)", "function approve(address spender, uint256 value) public returns (bool)", "function balanceOf(address who) public view returns (uint256)"]
+    const token_in_contract = new ethers.Contract(bUSD, decimals_abi, zkSyncProvider)
+    while(!balance_enough){
+        let era_balance = await token_in_contract.balanceOf(era_wallet.address)
+        balance_enough = era_balance.gte(expect_value)
+        if (!balance_enough){
+            console.log(" - bUSD balance on wallet ", wallet_unconnected.address, " has not reached", value," yet, waiting 5 sec. - ")
+            await delay(5000)
+        }
+    }
+    console.log(" - bUSD balance for wallet", wallet_unconnected.address, " of ", value, "on ERA reached. - ")
 }
 
 //Arbitrum: 9002
