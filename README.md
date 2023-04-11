@@ -50,7 +50,15 @@ When you start the bot, you will have 3 options:
   - Bridge x ETH from ERA to ETH
   - Wait until an ETH balance on ETH reaches x
   - Wait until an ETH balance on ERA reaches x
+  - SyncSwap x ETH to USDC
+  - SyncSwap x USDC to ETH
+  - SyncSwap x ETH to bUSD
+  - SyncSwap x bUSDC to ETH
+  - SyncSwap x USDC to bUSD
+  - SyncSwap x bUSD to USDC
   - Wait x milliseconds
+
+  *SyncSwapping an amount of -1 will swap your entire token Balance.* 
 
   Then, a prompt will ask you on which wallet you wish to perform the loop on. You can select multiple, they will be run in parallel.
 
