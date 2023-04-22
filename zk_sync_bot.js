@@ -499,10 +499,10 @@ async function bridge_orbiter_ETH_to_ERA(wallet_unconnected, value){// add 0.001
     console.log(" - Tx submitted for bridge ETH to ERA on wallet: ",eth_wallet.address,", hash (ETH): ", tx_send.hash, " - ")
     let receipt = await tx_send.wait()
     if (receipt.status){
-        console.log(" - Tx included for bridge ERA to ETH on wallet: ",era_wallet.address, " - ")
+        console.log(" - Tx included for bridge ERA to ETH on wallet: ",eth_wallet.address, " - ")
     }
     else{
-        console.log(" - Tx inclusion failed for bridge ERA to ETH on wallet: ",era_wallet.address, " - ")
+        console.log(" - Tx inclusion failed for bridge ERA to ETH on wallet: ",eth_wallet.address, " - ")
     }
 }
 
