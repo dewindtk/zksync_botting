@@ -3,7 +3,7 @@ import ethers, { BigNumber } from "ethers";
 import fs from "fs";
 import inquirer from 'inquirer'
 import fetch from "node-fetch";
-import axios from"axios"
+import axios, { all } from"axios"
 axios.default
 
 const axiosConfig = {headers: {Authorization: "5a203b2d-ce61-4444-b4ff-c5e1838e6cb8"}};
@@ -138,13 +138,15 @@ function task_to_message(task){
 }
 
 async function inq_3_chose_wallets(user_wallets){
+    let all_wallets = []
+    for (let i=0;i<Object.keys(user_wallets).length;i++){all_wallets.push(Object.keys(user_wallets)[i])}
     let q_wallet_choice = await inquirer.prompt([
         {
             type: 'checkbox',
             name: 'a',
             message: '\n ------- Choose the wallets you wish to perform the loops on -------:',
             choices: Object.keys(user_wallets),
-            default: [Object.keys(user_wallets)[0]]
+            default: all_wallets
     }])
     let Wallet_array_tasks_unconnected = []
     for (let wallet of q_wallet_choice.a){
