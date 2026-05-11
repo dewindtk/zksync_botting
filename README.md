@@ -64,4 +64,4 @@ When you start the bot, you will have 3 options:
 
   You may open several instanes of the bot in multiple terminals to run different loops on different wallets.
 
-  Happy botting, please report any bugs immediately to kaikun26 xD and any feature requests will be added asap
+  Happy botting, please report any bugs and any feature requests will be added asap
